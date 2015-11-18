@@ -55,57 +55,41 @@
 	  console.log( $(word[0]).css("color") );
 	  // left mouse button -> center
 	  if (e.button == 0) {
-	  	if ($(word[0]).css("color") == "rgb(0, 0, 255)") {
-	  		$(word[0]).css("color", "green");
-	  	}
-	  	else if ($(word[0]).css("color") == "rgb(0, 0, 0)") {
-	  		$(word[0]).css("color", "red");
-	  	}	  	
 	  	if (word.find(".explicity").length == 0) {
+	  		$(word[0]).css("color", "red");
 		  	word.append("<span class='explicity explicit-yes'> e </span>");	  	
 		  	word.find(".explicity").on("mouseup", function(d) {
 		  		if ($(this).hasClass("explicit-yes")) {
 		  			$(this).removeClass("explicit-yes");
 		  			$(this).addClass("implicit-yes");
 		  			$(this).html(" i ");
-	  				if ($(word[0]).css("color") == "rgb(255, 0, 0)") {
-	  					$(word[0]).css("color", "orange");
-	  				}
-	  				else if ($(word[0]).css("color") == "rgb(0, 128, 0)") {
-	  					$(word[0]).css("color", "yellow");
-	  				}
+	  				$(word[0]).css("color", "blue");
 		  		}
 		  		else {
 		  			$(this).removeClass("implicit-yes");
 		  			$(this).addClass("explicit-yes");
 		  			$(this).html(" e ");
-	  				if ($(word[0]).css("color") == "rgb(255, 255, 0)") {
-	  					$(word[0]).css("color", "blue");
-	  				}
-	  				else if ($(word[0]).css("color") == "rgb(255, 165, 0)") {
-	  					$(word[0]).css("color", "red");
-	  				}	  			
+	  				$(word[0]).css("color", "red");  			
 		  		}
 		  	})
-		}
+		}		
+		  if (word.find(".close").length == 0) {
+		  	word.append("<span class='close'> x </span>");	  	
+		  	word.find(".close").on("mouseup", function(d) {
+		  		word.find(".close").remove();
+		  		word.find(".explicity").remove();
+		  		word.css("color","");
+		  	})
+		  }
 	  }
 	  // right mouse button -> referenced object
 	  else if (e.button == 2) {
-	  	console.log($(word[0]).css("color"));
-	  	if ($(word[0]).css("color") == "rgb(255, 0, 0)") {
-	  		$(word[0]).css("color", "green");
+	  	if (($(word[0]).css('text-decoration')==="underline")) {
+	  		$(word[0]).css('text-decoration', '');	  		
 	  	}
-	  	else {
-	  		$(word[0]).css("color", "blue");
+	  	else {	  		
+	  		$(word[0]).css('text-decoration', 'underline');
 	  	}
-	  }
-	  if (word.find(".close").length == 0) {
-	  	word.append("<span class='close'> x </span>");	  	
-	  	word.find(".close").on("mouseup", function(d) {
-	  		word.find(".close").remove();
-	  		word.find(".explicity").remove();
-	  		word.css("color","");
-	  	})
 	  }
 
 	});
