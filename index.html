@@ -7,9 +7,49 @@
 </head>
 <body oncontextmenu="return false;">
  
+<button id="export">Export</button>
+<a id="downloadAnchorElem" style="display:none"></a>
 <div id="content"></div>
  
 <script>
+
+	$("#export").on("click", function() {
+		console.log("export!");
+		var sentenceArray = [];
+		$("#content p").each(function(i, paragraph) {
+			var sentenceObject = {};
+			var sentenceString = "";
+			var backCenters = [];
+			var referencedObjects = [];
+			var implicit = false;
+			$(paragraph).children().each(function(i, word) {
+				var wordString = $(word).html();
+				var myRegExp = new RegExp('<span .* </span>');
+				wordString = wordString.replace(myRegExp,"");
+				sentenceString += wordString;
+				if ($(word).hasClass("center")){
+					backCenters.push(i);
+					if ($(word).hasClass("implicit")){
+						implicit = true;
+					}
+				}
+				if ($(word).hasClass("reference")){
+					referencedObjects.push(i);			
+				}
+			})
+			sentenceObject.sentence = sentenceString;
+			sentenceObject.backCenter = backCenters;
+			sentenceObject.referencedObject = referencedObjects;
+			sentenceObject.implicit = implicit;
+			sentenceArray.push(sentenceObject);
+		});
+		console.log(sentenceArray);
+		var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sentenceArray));
+		var dlAnchorElem = document.getElementById('downloadAnchorElem');
+		dlAnchorElem.setAttribute("href",     dataStr     );
+		dlAnchorElem.setAttribute("download", "export.json");
+		dlAnchorElem.click();
+	});
 
 	var addToPage = function(index) {
 
@@ -57,6 +97,7 @@
 	  if (e.button == 0) {
 	  	if (word.find(".explicity").length == 0) {
 	  		$(word[0]).css("color", "red");
+			$(word[0]).addClass("center explicit");
 		  	word.append("<span class='explicity explicit-yes'> e </span>");	  	
 		  	word.find(".explicity").on("mouseup", function(d) {
 		  		if ($(this).hasClass("explicit-yes")) {
@@ -64,12 +105,16 @@
 		  			$(this).addClass("implicit-yes");
 		  			$(this).html(" i ");
 	  				$(word[0]).css("color", "blue");
+	  				$(word[0]).addClass("implicit");
+	  				$(word[0]).removeClass("explicit");
 		  		}
 		  		else {
 		  			$(this).removeClass("implicit-yes");
 		  			$(this).addClass("explicit-yes");
 		  			$(this).html(" e ");
-	  				$(word[0]).css("color", "red");  			
+	  				$(word[0]).css("color", "red");  
+	  				$(word[0]).addClass("explicit");	
+	  				$(word[0]).removeClass("implicit");	
 		  		}
 		  	})
 		}		
@@ -79,16 +124,19 @@
 		  		word.find(".close").remove();
 		  		word.find(".explicity").remove();
 		  		word.css("color","");
+	  			$(word[0]).removeClass("center explicit implicit");	
 		  	})
 		  }
 	  }
 	  // right mouse button -> referenced object
 	  else if (e.button == 2) {
 	  	if (($(word[0]).css('text-decoration')==="underline")) {
-	  		$(word[0]).css('text-decoration', '');	  		
+	  		$(word[0]).css('text-decoration', '');	
+	  		$(word[0]).removeClass("reference");
 	  	}
 	  	else {	  		
-	  		$(word[0]).css('text-decoration', 'underline');
+	  		$(word[0]).css('text-decoration', 'underline');  		
+	  		$(word[0]).addClass("reference");
 	  	}
 	  }
 
