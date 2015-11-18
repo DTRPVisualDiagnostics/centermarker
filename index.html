@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>jQuery.parseXML demo</title>
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+</head>
+<body oncontextmenu="return false;">
+ 
+<div id="content"></div>
+ 
+<script>
+
+	var addToPage = function(index) {
+
+		var utterance = $(cells[index]).children()[0].innerHTML;
+		var splitUtterance = utterance.split(" ");
+		var elementString = "<p>";
+		for (var i = 0; i < splitUtterance.length; i++) {
+			elementString += "<span class='word'>" + splitUtterance[i] + " </span>";
+		}
+		elementString += "</p>";
+		$("#content").append(elementString);
+
+	}
+
+	$.get('Team_R_KeyEpisode_04_05_15_Day_1NO_COLOR.xml', function(d){
+		rows = $(d).find( "Row" );
+		for (var i = 1; i < rows.length; i++) {
+			var utteranceAlreadyFound = false;
+			cells = $(rows[i]).find("Cell");
+			// sometimes rows are misformed (e.g. have a gap) so we check every cell, if it has an element with index 4
+			for (var j = 0; j < cells.length; j++) {
+				if ( $(cells[j]).attr("ss:Index") == "4" && $($(cells[j]).children()[0]).attr("ss:Type") == "String") {	
+					addToPage(j);	
+					utteranceAlreadyFound = true;
+					break;
+				}
+			}
+			// for normal rows we look for the starting index to figure out where the text is
+			if (!utteranceAlreadyFound) {
+				var utteranceIndex = 3;
+				if ( $(cells[0]).attr("ss:Index") != undefined ) {
+					utteranceIndex -= ($(cells[0]).attr("ss:Index") - 1);
+				}
+				if ($($(cells[utteranceIndex]).children()[0]).attr("ss:Type") == "String") {
+					addToPage(utteranceIndex);
+				}
+			}
+		}
+	});
+
+	$("#content").on("mousedown", ".word", function(e) {
+	  var word = $(this);
+	  console.log( $(word[0]).css("color") );
+	  // left mouse button -> center
+	  if (e.button == 0) {
+	  	if ($(word[0]).css("color") == "rgb(0, 0, 255)") {
+	  		$(word[0]).css("color", "green");
+	  	}
+	  	else if ($(word[0]).css("color") == "rgb(0, 0, 0)") {
+	  		$(word[0]).css("color", "red");
+	  	}	  	
+	  	if (word.find(".explicity").length == 0) {
+		  	word.append("<span class='explicity explicit-yes'> e </span>");	  	
+		  	word.find(".explicity").on("mouseup", function(d) {
+		  		if ($(this).hasClass("explicit-yes")) {
+		  			$(this).removeClass("explicit-yes");
+		  			$(this).addClass("implicit-yes");
+		  			$(this).html(" i ");
+	  				if ($(word[0]).css("color") == "rgb(255, 0, 0)") {
+	  					$(word[0]).css("color", "orange");
+	  				}
+	  				else if ($(word[0]).css("color") == "rgb(0, 128, 0)") {
+	  					$(word[0]).css("color", "yellow");
+	  				}
+		  		}
+		  		else {
+		  			$(this).removeClass("implicit-yes");
+		  			$(this).addClass("explicit-yes");
+		  			$(this).html(" e ");
+	  				if ($(word[0]).css("color") == "rgb(255, 255, 0)") {
+	  					$(word[0]).css("color", "blue");
+	  				}
+	  				else if ($(word[0]).css("color") == "rgb(255, 165, 0)") {
+	  					$(word[0]).css("color", "red");
+	  				}	  			
+		  		}
+		  	})
+		}
+	  }
+	  // right mouse button -> referenced object
+	  else if (e.button == 2) {
+	  	console.log($(word[0]).css("color"));
+	  	if ($(word[0]).css("color") == "rgb(255, 0, 0)") {
+	  		$(word[0]).css("color", "green");
+	  	}
+	  	else {
+	  		$(word[0]).css("color", "blue");
+	  	}
+	  }
+	  if (word.find(".close").length == 0) {
+	  	word.append("<span class='close'> x </span>");	  	
+	  	word.find(".close").on("mouseup", function(d) {
+	  		word.find(".close").remove();
+	  		word.find(".explicity").remove();
+	  		word.css("color","");
+	  	})
+	  }
+
+	});
+
+</script>
+ 
+</body>
+</html>
