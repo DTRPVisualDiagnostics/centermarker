@@ -8,6 +8,8 @@
 <body oncontextmenu="return false;">
  
 <button id="export">Export</button>
+<button id="importJson">Import JSON</button>
+<button id="loadXml">Load xml data</button>
 <a id="downloadAnchorElem" style="display:none"></a>
 <div id="content"></div>
  
@@ -18,7 +20,7 @@
 		var sentenceArray = [];
 		$("#content p").each(function(i, paragraph) {
 			var sentenceObject = {};
-			var sentenceString = "";
+			var sentenceArray = "";
 			var backCenters = [];
 			var referencedObjects = [];
 			var implicit = false;
@@ -51,96 +53,157 @@
 		dlAnchorElem.click();
 	});
 
-	var addToPage = function(index) {
+	var addToPage = function(utterance) {
 
-		var utterance = $(cells[index]).children()[0].innerHTML;
 		var splitUtterance = utterance.split(" ");
 		var elementString = "<p>";
 		for (var i = 0; i < splitUtterance.length; i++) {
-			elementString += "<span class='word'>" + splitUtterance[i] + " </span>";
+			var myRegExp = new RegExp('\\(.*\\)');
+			if (!splitUtterance[i].match(myRegExp)) {
+				elementString += "<span class='word'>" + splitUtterance[i] + " </span>";
+			}
 		}
 		elementString += "</p>";
 		$("#content").append(elementString);
 
 	}
 
-	$.get('Team_R_KeyEpisode_04_05_15_Day_1NO_COLOR.xml', function(d){
-		rows = $(d).find( "Row" );
-		for (var i = 1; i < rows.length; i++) {
-			var utteranceAlreadyFound = false;
-			cells = $(rows[i]).find("Cell");
-			// sometimes rows are misformed (e.g. have a gap) so we check every cell, if it has an element with index 4
-			for (var j = 0; j < cells.length; j++) {
-				if ( $(cells[j]).attr("ss:Index") == "4" && $($(cells[j]).children()[0]).attr("ss:Type") == "String") {	
-					addToPage(j);	
-					utteranceAlreadyFound = true;
-					break;
+	$("#importJson").on("click", function(){
+		$("#content").empty();
+	    $.get('export.json', function(array){
+	    	for (var j = 0; j < array.length; j++) {
+	    		var d = array[j];
+	    		var splitUtterance = d.sentence.split(" ");
+				var elementString = "<p>";
+				for (var i = 0; i < splitUtterance.length; i++) {
+					var myRegExp = new RegExp('\\(.*\\)');
+					if (!splitUtterance[i].match(myRegExp)) {
+						var classString = "";
+						var styleString = "";
+						var additionalString = "";
+						if (d.backCenter.indexOf(i) !== -1) {
+							if (d.implicit) {
+								classString += " center implicit";
+								styleString += " color: blue;"
+								additionalString += '<span class="explicity explicit-yes"> i </span> <span class="close"> x </span>'
+							}
+							else {		
+								classString += " center explicit";
+								styleString += " color: red;"
+								additionalString += '<span class="explicity implicit-yes"> e </span> <span class="close"> x </span>'		
+							}
+						}
+						if (d.referencedObject.indexOf(i) !== -1) {
+							classString += " reference";
+							styleString += " text-decoration: underline;"
+						}
+						elementString += "<span class='word'" + classString + " style=' " + styleString + "'>" + splitUtterance[i] + additionalString + " </span>";
+					}
 				}
-			}
-			// for normal rows we look for the starting index to figure out where the text is
-			if (!utteranceAlreadyFound) {
-				var utteranceIndex = 3;
-				if ( $(cells[0]).attr("ss:Index") != undefined ) {
-					utteranceIndex -= ($(cells[0]).attr("ss:Index") - 1);
-				}
-				if ($($(cells[utteranceIndex]).children()[0]).attr("ss:Type") == "String") {
-					addToPage(utteranceIndex);
-				}
-			}
-		}
+				elementString += "</p>";
+				$("#content").append(elementString);
+	    	};
+			initMouseInteraction();
+			$(".close").on("mouseup", function(d) {
+				var word = $($(d.target)[0]).parent();
+				word.find(".close").remove();
+				word.find(".explicity").remove();
+				word.css("color","");
+				$(word[0]).removeClass("center explicit implicit");	
+			})
+	    });
 	});
 
-	$("#content").on("mousedown", ".word", function(e) {
-	  var word = $(this);
-	  console.log( $(word[0]).css("color") );
-	  // left mouse button -> center
-	  if (e.button == 0) {
-	  	if (word.find(".explicity").length == 0) {
-	  		$(word[0]).css("color", "red");
-			$(word[0]).addClass("center explicit");
-		  	word.append("<span class='explicity explicit-yes'> e </span>");	  	
-		  	word.find(".explicity").on("mouseup", function(d) {
-		  		if ($(this).hasClass("explicit-yes")) {
-		  			$(this).removeClass("explicit-yes");
-		  			$(this).addClass("implicit-yes");
-		  			$(this).html(" i ");
-	  				$(word[0]).css("color", "blue");
-	  				$(word[0]).addClass("implicit");
-	  				$(word[0]).removeClass("explicit");
-		  		}
-		  		else {
-		  			$(this).removeClass("implicit-yes");
-		  			$(this).addClass("explicit-yes");
-		  			$(this).html(" e ");
-	  				$(word[0]).css("color", "red");  
-	  				$(word[0]).addClass("explicit");	
-	  				$(word[0]).removeClass("implicit");	
-		  		}
-		  	})
-		}		
-		  if (word.find(".close").length == 0) {
-		  	word.append("<span class='close'> x </span>");	  	
-		  	word.find(".close").on("mouseup", function(d) {
-		  		word.find(".close").remove();
-		  		word.find(".explicity").remove();
-		  		word.css("color","");
-	  			$(word[0]).removeClass("center explicit implicit");	
-		  	})
+	$("#loadXml").on("click", function() {
+		loadXml();
+	});
+
+	var loadXml = function() {
+		$("#content").empty();
+		$.get('Team_R_KeyEpisode_04_05_15_Day_1NO_COLOR.xml', function(d){
+			rows = $(d).find( "Row" );
+			for (var i = 1; i < rows.length; i++) {
+				var utteranceAlreadyFound = false;
+				cells = $(rows[i]).find("Cell");
+				// sometimes rows are misformed (e.g. have a gap) so we check every cell, if it has an element with index 4
+				for (var j = 0; j < cells.length; j++) {
+					if ( $(cells[j]).attr("ss:Index") == "4" && $($(cells[j]).children()[0]).attr("ss:Type") == "String") {	
+						var utterance = $(cells[j]).children()[0].innerHTML;
+						addToPage(utterance);	
+						utteranceAlreadyFound = true;
+						break;
+					}
+				}
+				// for normal rows we look for the starting index to figure out where the text is
+				if (!utteranceAlreadyFound) {
+					var utteranceIndex = 3;
+					if ( $(cells[0]).attr("ss:Index") != undefined ) {
+						utteranceIndex -= ($(cells[0]).attr("ss:Index") - 1);
+					}
+					if ($($(cells[utteranceIndex]).children()[0]).attr("ss:Type") == "String") {
+						var utterance = $(cells[utteranceIndex]).children()[0].innerHTML;
+						addToPage(utterance);
+					}
+				}
+			}
+		});
+
+		initMouseInteraction();	
+	}
+
+	var initMouseInteraction = function() {
+		$("#content").on("mousedown", ".word", function(e) {
+		  var word = $(this);
+		  console.log( $(word[0]).css("color") );
+		  // left mouse button -> center
+		  if (e.button == 0) {
+		  	if (word.find(".explicity").length == 0) {
+		  		$(word[0]).css("color", "red");
+				$(word[0]).addClass("center explicit");
+			  	word.append("<span class='explicity explicit-yes'> e </span>");	  	
+			  	word.find(".explicity").on("mouseup", function(d) {
+			  		if ($(this).hasClass("explicit-yes")) {
+			  			$(this).removeClass("explicit-yes");
+			  			$(this).addClass("implicit-yes");
+			  			$(this).html(" i ");
+		  				$(word[0]).css("color", "blue");
+		  				$(word[0]).addClass("implicit");
+		  				$(word[0]).removeClass("explicit");
+			  		}
+			  		else {
+			  			$(this).removeClass("implicit-yes");
+			  			$(this).addClass("explicit-yes");
+			  			$(this).html(" e ");
+		  				$(word[0]).css("color", "red");  
+		  				$(word[0]).addClass("explicit");	
+		  				$(word[0]).removeClass("implicit");	
+			  		}
+			  	})
+			}		
+			  if (word.find(".close").length == 0) {
+			  	word.append("<span class='close'> x </span>");	  	
+			  	word.find(".close").on("mouseup", function(d) {
+			  		word.find(".close").remove();
+			  		word.find(".explicity").remove();
+			  		word.css("color","");
+		  			$(word[0]).removeClass("center explicit implicit");	
+			  	})
+			  }
 		  }
-	  }
-	  // right mouse button -> referenced object
-	  else if (e.button == 2) {
-	  	if (($(word[0]).css('text-decoration')==="underline")) {
-	  		$(word[0]).css('text-decoration', '');	
-	  		$(word[0]).removeClass("reference");
-	  	}
-	  	else {	  		
-	  		$(word[0]).css('text-decoration', 'underline');  		
-	  		$(word[0]).addClass("reference");
-	  	}
-	  }
+		  // right mouse button -> referenced object
+		  else if (e.button == 2) {
+		  	if (($(word[0]).css('text-decoration')==="underline")) {
+		  		$(word[0]).css('text-decoration', '');	
+		  		$(word[0]).removeClass("reference");
+		  	}
+		  	else {	  		
+		  		$(word[0]).css('text-decoration', 'underline');  		
+		  		$(word[0]).addClass("reference");
+		  	}
+		  }
 
-	});
+		});	
+	};
 
 </script>
  
