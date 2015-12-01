@@ -24,7 +24,9 @@
 			var backCenters = [];
 			var referencedObjects = [];
 			var implicit = false;
-			$(paragraph).children().each(function(i, word) {
+			var transition = $(paragraph).find("select")[0].value;
+			var moveRef = -1;
+			$(paragraph).children(".word").each(function(i, word) {
 				var wordString = $(word).html();
 				var myRegExp = new RegExp('<span .* </span>');
 				wordString = wordString.replace(myRegExp,"");
@@ -33,6 +35,9 @@
 					backCenters.push(i);
 					if ($(word).hasClass("implicit")){
 						implicit = true;
+						if (this.className.match(new RegExp('moveRef.*')) !== null) {
+							moveRef = this.className.match(new RegExp('moveRef.*'))[0].replace("moveRef-","");
+						}
 					}
 				}
 				if ($(word).hasClass("reference")){
@@ -43,6 +48,8 @@
 			sentenceObject.backCenter = backCenters;
 			sentenceObject.referencedObject = referencedObjects;
 			sentenceObject.implicit = implicit;
+			sentenceObject.transition = transition;
+			sentenceObject.moveRef = moveRef;
 			sentenceArray.push(sentenceObject);
 		});
 		console.log(sentenceArray);
@@ -53,10 +60,11 @@
 		dlAnchorElem.click();
 	});
 
-	var addToPage = function(utterance) {
+	var addToPage = function(utterance, index) {
 
 		var splitUtterance = utterance.split(" ");
-		var elementString = "<p>";
+		var elementString = "<p>" + index + " | ";
+		elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> </select> ';
 		for (var i = 0; i < splitUtterance.length; i++) {
 			var myRegExp = new RegExp('\\(.*\\)');
 			if (!splitUtterance[i].match(myRegExp)) {
@@ -74,7 +82,8 @@
 	    	for (var j = 0; j < array.length; j++) {
 	    		var d = array[j];
 	    		var splitUtterance = d.sentence.split(" ");
-				var elementString = "<p>";
+				var elementString = "<p>" + (j+1) + " | ";
+				elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> </select> ';
 				for (var i = 0; i < splitUtterance.length; i++) {
 					var myRegExp = new RegExp('\\(.*\\)');
 					if (!splitUtterance[i].match(myRegExp)) {
@@ -129,7 +138,7 @@
 				for (var j = 0; j < cells.length; j++) {
 					if ( $(cells[j]).attr("ss:Index") == "4" && $($(cells[j]).children()[0]).attr("ss:Type") == "String") {	
 						var utterance = $(cells[j]).children()[0].innerHTML;
-						addToPage(utterance);	
+						addToPage(utterance, i);	
 						utteranceAlreadyFound = true;
 						break;
 					}
@@ -142,7 +151,7 @@
 					}
 					if ($($(cells[utteranceIndex]).children()[0]).attr("ss:Type") == "String") {
 						var utterance = $(cells[utteranceIndex]).children()[0].innerHTML;
-						addToPage(utterance);
+						addToPage(utterance, i);
 					}
 				}
 			}
@@ -169,6 +178,10 @@
 		  				$(word[0]).css("color", "blue");
 		  				$(word[0]).addClass("implicit");
 		  				$(word[0]).removeClass("explicit");
+		  				var moveReference = prompt("Which move does the implicit center reference? (can be left empty)");
+		  				if (moveReference) {
+		  					$(word[0]).addClass("moveRef-"+moveReference);	 				
+		  				}
 			  		}
 			  		else {
 			  			$(this).removeClass("implicit-yes");
@@ -187,6 +200,9 @@
 			  		word.find(".explicity").remove();
 			  		word.css("color","");
 		  			$(word[0]).removeClass("center explicit implicit");	
+		  			$(word[0]).removeClass (function (index, css) {
+					    return (css.match (new RegExp('moveRef.*')) || []).join(' ');
+					});
 			  	})
 			  }
 		  }
