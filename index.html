@@ -36,7 +36,7 @@
 					if ($(word).hasClass("implicit")){
 						implicit = true;
 						if (this.className.match(new RegExp('moveRef.*')) !== null) {
-							moveRef = this.className.match(new RegExp('moveRef.*'))[0].replace("moveRef-","");
+							moveRef = Number.parseInt(this.className.match(new RegExp('moveRef.*'))[0].replace("moveRef-",""));
 						}
 					}
 				}
