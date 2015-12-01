@@ -110,7 +110,8 @@
 					}
 				}
 				elementString += "</p>";
-				$("#content").append(elementString);
+				var appended = $("#content").append(elementString);
+				$("#content").children().last().find("select[name='transition']")[0].value=d.transition;
 	    	};
 			initMouseInteraction();
 			$(".close").on("mouseup", function(d) {
