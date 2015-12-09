@@ -28,6 +28,7 @@
 			var implicit = false;
 			var transition = $(paragraph).find("select")[0].value;
 			var moveRef = -1;
+			var moveNumber = paragraph.innerText.split("|")[0].trim();
 			$(paragraph).children(".word").each(function(i, word) {
 				var wordString = $(word).html();
 				var spanRegExp = new RegExp('<span .* </span>');
@@ -52,6 +53,7 @@
 			sentenceObject.implicit = implicit;
 			sentenceObject.transition = transition;
 			sentenceObject.moveRef = moveRef;
+			sentenceObject.moveNumber = moveNumber;
 			sentenceArray.push(sentenceObject);
 		});
 		console.log(sentenceArray);
@@ -83,12 +85,12 @@
 		$("#content").empty();
 	    $.get('export.json', function(array){
 	    	for (var j = 0; j < array.length; j++) {
+	    		var d = array[j];
 	    		if (d.sentence.match(bracketsRegExp)) {
 	    			return;
 	    		}
-	    		var d = array[j];
 	    		var splitUtterance = d.sentence.split(" ");
-				var elementString = "<p>" + (j+1) + " | ";
+				var elementString = "<p>" + d.moveNumber + " | ";
 				elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> </select> ';
 				for (var i = 0; i < splitUtterance.length; i++) {					
 					//if (!splitUtterance[i].match(bracketsRegExp)) {
@@ -102,12 +104,12 @@
 								}
 								classString += " center implicit";
 								styleString += " color: blue;"
-								additionalString += '<span class="explicity explicit-yes"> i </span> <span class="close"> x </span>'
+								additionalString += '<span class="explicity implicit-yes"> i </span> <span class="close"> x </span>'
 							}
 							else {		
 								classString += " center explicit";
 								styleString += " color: red;"
-								additionalString += '<span class="explicity implicit-yes"> e </span> <span class="close"> x </span>'		
+								additionalString += '<span class="explicity explicit-yes"> e </span> <span class="close"> x </span>'		
 							}
 						}
 						if (d.referencedObject.indexOf(i) !== -1) {
