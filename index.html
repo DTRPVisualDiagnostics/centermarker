@@ -14,6 +14,8 @@
 <div id="content"></div>
  
 <script>
+	
+	var bracketsRegExp = new RegExp('^\\(.*\\)$');
 
 	$("#export").on("click", function() {
 		console.log("export!");
@@ -28,8 +30,8 @@
 			var moveRef = -1;
 			$(paragraph).children(".word").each(function(i, word) {
 				var wordString = $(word).html();
-				var myRegExp = new RegExp('<span .* </span>');
-				wordString = wordString.replace(myRegExp,"");
+				var spanRegExp = new RegExp('<span .* </span>');
+				wordString = wordString.replace(spanRegExp,"");
 				sentenceString += wordString;
 				if ($(word).hasClass("center")){
 					backCenters.push(i);
@@ -44,7 +46,7 @@
 					referencedObjects.push(i);			
 				}
 			})
-			sentenceObject.sentence = sentenceString;
+			sentenceObject.sentence = sentenceString.trim();
 			sentenceObject.backCenter = backCenters;
 			sentenceObject.referencedObject = referencedObjects;
 			sentenceObject.implicit = implicit;
@@ -61,15 +63,16 @@
 	});
 
 	var addToPage = function(utterance, index) {
-
+		if (utterance.match(bracketsRegExp)) {
+			return;
+		}
 		var splitUtterance = utterance.split(" ");
 		var elementString = "<p>" + index + " | ";
 		elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> </select> ';
 		for (var i = 0; i < splitUtterance.length; i++) {
-			var myRegExp = new RegExp('\\(.*\\)');
-			if (!splitUtterance[i].match(myRegExp)) {
+			//if (!splitUtterance[i].match(bracketsRegExp)) {
 				elementString += "<span class='word'>" + splitUtterance[i] + " </span>";
-			}
+			//}
 		}
 		elementString += "</p>";
 		$("#content").append(elementString);
@@ -80,18 +83,23 @@
 		$("#content").empty();
 	    $.get('export.json', function(array){
 	    	for (var j = 0; j < array.length; j++) {
+	    		if (d.sentence.match(bracketsRegExp)) {
+	    			return;
+	    		}
 	    		var d = array[j];
 	    		var splitUtterance = d.sentence.split(" ");
 				var elementString = "<p>" + (j+1) + " | ";
 				elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> </select> ';
-				for (var i = 0; i < splitUtterance.length; i++) {
-					var myRegExp = new RegExp('\\(.*\\)');
-					if (!splitUtterance[i].match(myRegExp)) {
+				for (var i = 0; i < splitUtterance.length; i++) {					
+					//if (!splitUtterance[i].match(bracketsRegExp)) {
 						var classString = "";
 						var styleString = "";
 						var additionalString = "";
 						if (d.backCenter.indexOf(i) !== -1) {
 							if (d.implicit) {
+								if (d.moveRef != -1) {
+									classString += " moveRef-"+d.moveRef;
+								}
 								classString += " center implicit";
 								styleString += " color: blue;"
 								additionalString += '<span class="explicity explicit-yes"> i </span> <span class="close"> x </span>'
@@ -106,8 +114,8 @@
 							classString += " reference";
 							styleString += " text-decoration: underline;"
 						}
-						elementString += "<span class='word'" + classString + " style=' " + styleString + "'>" + splitUtterance[i] + additionalString + " </span>";
-					}
+						elementString += "<span class='word" + classString + " ' style=' " + styleString + "'>" + splitUtterance[i] + additionalString + " </span>";
+					//}
 				}
 				elementString += "</p>";
 				var appended = $("#content").append(elementString);
@@ -130,7 +138,7 @@
 
 	var loadXml = function() {
 		$("#content").empty();
-		$.get('Team_R_KeyEpisode_04_05_15_Day_1NO_COLOR.xml', function(d){
+		$.get('Team_R_KeyEpisode_15_05_15_Day_4_Transcript.xml', function(d){
 			rows = $(d).find( "Row" );
 			for (var i = 1; i < rows.length; i++) {
 				var utteranceAlreadyFound = false;
@@ -164,7 +172,6 @@
 	var initMouseInteraction = function() {
 		$("#content").on("mousedown", ".word", function(e) {
 		  var word = $(this);
-		  console.log( $(word[0]).css("color") );
 		  // left mouse button -> center
 		  if (e.button == 0) {
 		  	if (word.find(".explicity").length == 0) {
@@ -181,16 +188,24 @@
 		  				$(word[0]).removeClass("explicit");
 		  				var moveReference = prompt("Which move does the implicit center reference? (can be left empty)");
 		  				if (moveReference) {
-		  					$(word[0]).addClass("moveRef-"+moveReference);	 				
+		  					$(word[0]).addClass("moveRef-"+moveReference);	 	
+		  					$(word[0]).parent().find("select")[0].value = "integration";
+		  					$("<span class='moveArrow'> =>" + moveReference + "</span>").insertAfter($(word[0]).parent().find("select"));	
+		  				}
+		  				else {
+		  					$(word[0]).parent().find("select")[0].value = "jump";			
 		  				}
 			  		}
 			  		else {
 			  			$(this).removeClass("implicit-yes");
 			  			$(this).addClass("explicit-yes");
 			  			$(this).html(" e ");
-		  				$(word[0]).css("color", "red");  
-		  				$(word[0]).addClass("explicit");	
-		  				$(word[0]).removeClass("implicit");	
+		  				$(word[0]).css("color", "red");  	
+		  				$(word[0]).removeClass("implicit");			  					
+			  			$(word[0]).removeClass (function (index, css) {
+						    return (css.match (new RegExp('moveRef.*')) || []).join(' ');
+						});
+		  				$(word[0]).addClass("explicit");
 			  		}
 			  	})
 			}		
@@ -202,6 +217,9 @@
 			  		word.css("color","");
 		  			$(word[0]).removeClass("center explicit implicit");	
 		  			$(word[0]).removeClass (function (index, css) {
+		  				if (css.match (new RegExp('moveRef.*'))) {
+		  					$(word[0]).parent().find(".moveArrow").remove();
+		  				}
 					    return (css.match (new RegExp('moveRef.*')) || []).join(' ');
 					});
 			  	})
