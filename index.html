@@ -31,7 +31,7 @@
 			var implicit = false;
 			var transition = $(paragraph).find("select")[0].value;
 			var moveRef = -1;
-			var moveNumber = paragraph.innerText.split("|")[0].trim() || -1;
+			var moveNumber = $(paragraph).text().split("|")[0].trim() || -1;
 			$(paragraph).children(".word").each(function(i, word) {
 				var wordString = $(word).html();
 				var spanRegExp = new RegExp('<span .* </span>');
