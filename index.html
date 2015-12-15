@@ -10,6 +10,9 @@
 <button id="export">Export</button>
 <button id="importJson">Import JSON</button>
 <button id="loadXml">Load xml data</button>
+<input type="number" name="moveNumber" min="1" max="1" value="1">
+<button id="hideMoves">Hide moves</button>
+<button id="showMoves">Show all moves</button>
 <a id="downloadAnchorElem" style="display:none"></a>
 <div id="content"></div>
  
@@ -69,7 +72,7 @@
 			return;
 		}
 		var splitUtterance = utterance.split(" ");
-		var elementString = "<p>" + index + " | ";
+		var elementString = "<p data-move-number=" + index + ">" + index + " | ";
 		elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> </select> ';
 		for (var i = 0; i < splitUtterance.length; i++) {
 			//if (!splitUtterance[i].match(bracketsRegExp)) {
@@ -90,7 +93,7 @@
 	    			return;
 	    		}
 	    		var splitUtterance = d.sentence.split(" ");
-				var elementString = "<p>" + d.moveNumber + " | ";
+				var elementString = "<p data-move-number=" + d.moveNumber + ">" + d.moveNumber + " | ";
 				elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> </select> ';
 				if (d.moveRef !== -1) {
 					elementString += "<span class='moveArrow'> [=>" + d.moveRef + "] </span>";
@@ -143,7 +146,7 @@
 
 	var loadXml = function() {
 		$("#content").empty();
-		$.get('Team_R_KeyEpisode_15_05_15_Day_4_Transcript.xml', function(d){
+		$.get('Team_L_KeyEpisode_08_05_15_Day_2_Transcript.xml', function(d){
 			rows = $(d).find( "Row" );
 			for (var i = 1; i < rows.length; i++) {
 				var utteranceAlreadyFound = false;
@@ -169,7 +172,8 @@
 					}
 				}
 			}
-		});
+			$("input[name='moveNumber']")[0].max = $("#content p:last").data("moveNumber");
+		});	
 
 		initMouseInteraction();	
 	}
@@ -233,16 +237,17 @@
 		  // right mouse button -> referenced object
 		  else if (e.button == 2) {
 
-		  	$(word[0]).parent().find(".reference").each(function(i, d) {
-		  		$(d).removeClass("reference"); 
-		  		$(d).css('text-decoration', '');	 
-		  	})
-
-		  	if (($(word[0]).css('text-decoration')==="underline")) {
+		  	if ($(word[0]).css('text-decoration')==="underline") {
 		  		$(word[0]).css('text-decoration', '');	
 		  		$(word[0]).removeClass("reference");
 		  	}
-		  	else {	  		
+		  	else {	  
+
+			  	$(word[0]).parent().find(".reference").each(function(i, d) {
+			  		$(d).removeClass("reference"); 
+			  		$(d).css('text-decoration', '');	 
+			  	})		
+
 		  		$(word[0]).css('text-decoration', 'underline');  		
 		  		$(word[0]).addClass("reference");
 				var sentenceIndex = $($(word[0]).parent()[0]).index();
@@ -257,6 +262,20 @@
 
 		});	
 	};
+
+	$("#hideMoves").on("click", function() {
+		$("#content p").each(function(i,d){
+			if (Number.parseInt(d.getAttribute("data-move-number")) < Number.parseInt($("input[name='moveNumber']")[0].value)) {
+				d.hidden = true;
+			}
+		});
+	});
+
+	$("#showMoves").on("click", function() {
+		$("#content p:hidden").each(function(i,d){
+			d.hidden = false;
+		});
+	});
 
 </script>
  
