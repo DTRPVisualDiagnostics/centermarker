@@ -10,6 +10,7 @@
 <button id="loadXml">Load xml data</button>
 <button id="exportJson">Export JSON</button>
 <button id="importJson">Import JSON</button>
+<button id="showTransitionCounts">Show counts of transition states</button>
 <br/>
 <br/>
 <input id="teamNameInput" type="text" name="teamName" placeholder="team name">
@@ -330,6 +331,22 @@
 		$("#content p:hidden").each(function(i,d){
 			d.hidden = false;
 		});
+	});
+
+	$("#showTransitionCounts").on("click", function() {		
+		var paragraphs = $("#content p");
+		var beginning = getBeginning(paragraphs);
+		var end = getEnd(paragraphs);
+		var transitionCounts = {};
+		for (var i = beginning; i <= end; i++) {	
+			var transition = $(paragraphs[i]).find("select")[0].value;
+			if (!(transition in transitionCounts)) {
+			    transitionCounts[transition] = 0;
+			}
+
+			transitionCounts[transition]++;
+		}
+		window.alert(JSON.stringify(transitionCounts));
 	});
 
 </script>
