@@ -108,7 +108,7 @@
 
 	var getBeginning = function(paragraphs) {
 		for (var i = 0; i < paragraphs.length; i++) {
-			if ($(paragraphs[i]).find(".center").length !== 0 || $(paragraphs[i]).find(".center").length !== 0) {
+			if ($(paragraphs[i]).find(".center").length !== 0 || $(paragraphs[i]).find(".reference").length !== 0) {
 				return i;
 			}
 		}
@@ -116,7 +116,7 @@
 
 	var getEnd = function(paragraphs) {
 		for (var i = paragraphs.length; i >= 0; i--) {
-			if ($(paragraphs[i]).find(".center").length !== 0 || $(paragraphs[i]).find(".center").length !== 0) {
+			if ($(paragraphs[i]).find(".center").length !== 0 || $(paragraphs[i]).find(".reference").length !== 0) {
 				return i;
 			}
 		}
