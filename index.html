@@ -7,7 +7,7 @@
 </head>
 <body oncontextmenu="return false;">
  
-<button id="export">Export</button>
+<button id="exportJson">Export JSON</button>
 <button id="importJson">Import JSON</button>
 <button id="loadXml">Load xml data</button>
 <input type="number" name="moveNumber" min="1" max="1" value="1">
@@ -20,8 +20,7 @@
 	
 	var bracketsRegExp = new RegExp('^\\(.*\\)$');
 
-	$("#export").on("click", function() {
-		console.log("export!");
+	$("#exportJson").on("click", function() {
 		var sentenceArray = [];
 		$("#content p").each(function(i, paragraph) {
 			var sentenceObject = {};
@@ -59,7 +58,6 @@
 			sentenceObject.moveNumber = moveNumber;
 			sentenceArray.push(sentenceObject);
 		});
-		console.log(sentenceArray);
 		var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sentenceArray));
 		var dlAnchorElem = document.getElementById('downloadAnchorElem');
 		dlAnchorElem.setAttribute("href",     dataStr     );
