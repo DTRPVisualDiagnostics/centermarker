@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>jQuery.parseXML demo</title>
   <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 </head>
 <body oncontextmenu="return false;">
  
@@ -11,6 +12,7 @@
 <button id="exportJson">Export JSON</button>
 <button id="importJson">Import JSON</button>
 <button id="showTransitionCounts">Show counts of transition states</button>
+<button id="colorTfIdf">Show TfIdf</button>
 <br/>
 <br/>
 <input id="teamNameInput" type="text" name="teamName" placeholder="team name">
@@ -25,6 +27,8 @@
 <div id="content"></div>
  
 <script>
+
+	var d3Color = d3.scale.category10();
 	
 	var bracketsRegExp = new RegExp('^\\(.*\\)$');
 
@@ -78,14 +82,18 @@
 		var teamName = $("#teamNameInput").val();
 		var phase = $("#phaseInput").val();
 		var paragraphs = $("#content p");
-		var beginning = getBeginning(paragraphs);
-		var end = getEnd(paragraphs);
+		//var beginning = getBeginning(paragraphs);
+		//var end = getEnd(paragraphs);
+		var end = paragraphs[paragraphs.length-1].getAttribute("data-move-number");
 
-		for (var i = beginning; i <= end; i++) {			
+		for (var i = 1; i <= end; i++) {			
 			var sentenceCSV = [];
-			var transition = $(paragraphs[i]).find("select")[0].value;
-			var moveNumber = $(paragraphs[i]).data("moveNumber");
-			sentenceCSV.push( moveNumber );
+			var el = $('*[data-move-number="' + i + '"]');
+			var transition = "c_";
+			if (el.length > 0) {
+				transition = $('*[data-move-number="' + i + '"]').find("select")[0].value[0];
+			}
+			sentenceCSV.push( i );
 			sentenceCSV.push( teamName );
 			sentenceCSV.push( phase );
 			sentenceCSV.push( transition );
@@ -124,12 +132,12 @@
 	};
 
 	var addToPage = function(utterance, index) {
-		if (utterance.match(bracketsRegExp)) {
+		/*if (utterance.match(bracketsRegExp)) {
 			return;
-		}
+		}*/
 		var splitUtterance = utterance.split(" ");
 		var elementString = "<p data-move-number=" + index + ">" + index + " | ";
-		elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> </select> ';
+		elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> <option value="meta">meta</option> <option value="confirmation">confirmation</option> <option value="none">none</option> </select> ';
 		for (var i = 0; i < splitUtterance.length; i++) {
 			//if (!splitUtterance[i].match(bracketsRegExp)) {
 				elementString += "<span class='word'>" + splitUtterance[i] + " </span>";
@@ -137,6 +145,9 @@
 		}
 		elementString += "</p>";
 		$("#content").append(elementString);
+		if (utterance.match(bracketsRegExp)) {
+			$("#content").children().last().find("select[name='transition']")[0].value="none";
+		}
 
 	}
 
@@ -145,12 +156,12 @@
 	    $.get('export.json', function(array){
 	    	for (var j = 0; j < array.length; j++) {
 	    		var d = array[j];
-	    		if (d.sentence.match(bracketsRegExp)) {
+	    		/*if (d.sentence.match(bracketsRegExp)) {
 	    			return;
-	    		}
+	    		}*/
 	    		var splitUtterance = d.sentence.split(" ");
 				var elementString = "<p data-move-number=" + d.moveNumber + ">" + d.moveNumber + " | ";
-				elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> </select> ';
+				elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> <option value="meta">meta</option> <option value="confirmation">confirmation</option> <option value="none">none</option> </select> ';
 				if (d.moveRef !== -1) {
 					elementString += "<span class='moveArrow'> [=>" + d.moveRef + "] </span>";
 				}
@@ -200,9 +211,13 @@
 		loadXml();
 	});
 
+	$("#colorTfIdf").on("click", function() {
+		colorTfIdfWords();
+	});
+
 	var loadXml = function() {
 		$("#content").empty();
-		$.get('Team_L_KeyEpisode_08_05_15_Day_2_Transcript.xml', function(d){
+		$.get('Team_R_KeyEpisode_12_05_15_Day_3_Transcript.xml', function(d){
 			rows = $(d).find( "Row" );
 			for (var i = 1; i < rows.length; i++) {
 				var utteranceAlreadyFound = false;
@@ -231,7 +246,30 @@
 			$("input[name='moveNumber']")[0].max = $("#content p:last").data("moveNumber");
 		});	
 
-		initMouseInteraction();	
+		initMouseInteraction();
+
+	}
+
+	function colorTfIdfWords() {
+
+		var ary = [ ["social","society","relationship"],["professionalism","strategies","ethics"],["dignity", "motivation"],["negative","positive","signals"],["pov","persona","insight","vision","assumption"],["streets","homeless","person","peer"]]
+
+		$("#content p").each(
+			function(){
+				$(this).children("span").each(
+					function(){
+						var that = this;
+						ary.forEach(function(element, index, array) {
+							element.forEach(function(el, i, ar) {
+								if (that.innerHTML.replace(/\./g," ").replace(/,/g," ").replace(/\?/g," ").replace(/!/g," ").trim() === el) {
+									$(that).css("color",d3Color(index))
+									$(that).css("font-weight","900")
+								}
+							})
+						})
+						
+					})
+			})
 	}
 
 	var initMouseInteraction = function() {
