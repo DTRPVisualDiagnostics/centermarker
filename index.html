@@ -9,6 +9,7 @@
 <body oncontextmenu="return false;">
  
 <button id="loadXml">Load xml data</button>
+<button id="loadTxt">Load txt data</button>
 <button id="exportJson">Export JSON</button>
 <button id="importJson">Import JSON</button>
 <button id="showTransitionCounts">Show counts of transition states</button>
@@ -215,6 +216,16 @@
 
 	$("#loadXml").on("click", function() {
 		loadXml();
+	});
+
+	$("#loadTxt").on("click", function() {
+		$("#content").empty();
+		$.get('import.txt', function(d){
+			d.split("\n").forEach(function(el, index, ary){
+				addToPage(el,index+1)
+			})
+		})
+		initMouseInteraction();
 	});
 
 	$("#colorTfIdf").on("click", function() {
