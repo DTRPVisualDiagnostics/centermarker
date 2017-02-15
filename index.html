@@ -90,8 +90,14 @@
 			var sentenceCSV = [];
 			var el = $('*[data-move-number="' + i + '"]');
 			var transition = "c_";
-			if (el.length > 0) {
-				transition = $('*[data-move-number="' + i + '"]').find("select")[0].value[0];
+			if (el.length > 0) {				
+				transition = $('*[data-move-number="' + i + '"]').find("select")[0].value;
+				if (transition === "confirmation") {
+					transition = "y"
+				}
+				else {
+					transition = transition[0]
+				}
 			}
 			sentenceCSV.push( i );
 			sentenceCSV.push( teamName );
