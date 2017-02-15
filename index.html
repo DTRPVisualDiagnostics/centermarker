@@ -141,7 +141,7 @@
 		/*if (utterance.match(bracketsRegExp)) {
 			return;
 		}*/
-		var splitUtterance = utterance.split(" ");
+		var splitUtterance = utterance.split(/\s+/);
 		var elementString = "<p data-move-number=" + index + ">" + index + " | ";
 		elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> <option value="meta">meta</option> <option value="confirmation">confirmation</option> <option value="none">none</option> </select> ';
 		for (var i = 0; i < splitUtterance.length; i++) {
@@ -165,7 +165,7 @@
 	    		/*if (d.sentence.match(bracketsRegExp)) {
 	    			return;
 	    		}*/
-	    		var splitUtterance = d.sentence.split(" ");
+	    		var splitUtterance = d.sentence.split(/\s+/);
 				var elementString = "<p data-move-number=" + d.moveNumber + ">" + d.moveNumber + " | ";
 				elementString += '<select name="transition">  <option value="continuation">continuation</option>  <option value="drift">drift</option>   <option value="integration">integration</option>  <option value="jump">jump</option> <option value="meta">meta</option> <option value="confirmation">confirmation</option> <option value="none">none</option> </select> ';
 				if (d.moveRef !== -1) {
